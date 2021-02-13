@@ -2,6 +2,9 @@ from pathlib import Path
 import pandas as pd
 
 # TODO: create data frames limited by type of hemorrage & by list of image ID's to create smaller data sets
+
+# TODO: in combination with DicomImage, pull metadata from images and add to excel files
+
 class CSVFile:
 	def __init__(self):
 		self.home_path = Path.cwd()
