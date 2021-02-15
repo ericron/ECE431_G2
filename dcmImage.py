@@ -20,13 +20,15 @@ class DicomImage:
 		self.dicom_images.append(im)
 		return im
 
-	def show_Dicom(self):
-		for i in range(len(self.dicom_images)):
-			if self.dicom_images[i] is not None:
-				arr = self.dicom_images[i].pixel_array
-				plt.imshow(arr, cmap='gray')
-				plt.show()
-
+	def show_Dicom(self, dicom_image):
+		"""
+		Displays DICOM image
+		:param dicom_image: DICOM image
+		:return: None
+		"""
+		arr = dicom_image.pixel_array
+		plt.imshow(arr, cmap='gray')
+		plt.show()
 
 	def scale_to_hu(self, im):
 		"""
@@ -42,7 +44,7 @@ class DicomImage:
 
 	def analyze_image(self, im):
 		"""
-		prints out each values in data set
+		prints out each values in data set ************takes a long time to run*********
 		:param im:numpy array
 		:return: None
 		"""
@@ -54,8 +56,6 @@ class DicomImage:
 				values.append(int(x))
 		values.sort()
 		print(values)
-
-
 
 	def histogram(self, im):
 		scaled = self.scale_to_hu(im)
@@ -79,13 +79,13 @@ class DicomImage:
 
 if __name__ == '__main__':
 	folder = "exampleImages_S00"
-	DI = DicomImage(folder)
+	di = DicomImage(folder)
 	f1 = "ID_000000e27.dcm"
-	im1 = DI.load_Dicom(f1)
+	im1 = di.load_Dicom(f1)
+	di.show_Dicom(im1)
+	di.histogram(im1)
 	f2 = "ID_000a2d7b0.dcm"
-	im2 = DI.load_Dicom(f2)
-	# DI.show_Dicom()
-	#DI.histogram(im1)
-	#DI.histogram(im2)
-	im2 = DI.scale_to_hu(im2)
-	DI.analyze_image(im2)
+	im2 = di.load_Dicom(f2)
+	di.show_Dicom(im2)
+	di.histogram(im2)
+
