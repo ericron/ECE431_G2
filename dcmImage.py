@@ -65,16 +65,17 @@ class DicomImage:
 		plt.ylabel("Frequency")
 		# plt.xticks([-1000, -105, 0, 350], ["Air", 'Fat', "water", "Bone- Cancellous"], rotation=90)
 		plt.show()
-		# # most important section of data
-		# scaled = scaled.astype(np.int16)
-		# plt.hist(scaled.flatten(), bins=200, range=(0, 100))
-		# # plt.xlim((-150, 1000))
-		# plt.xlabel("Hounstfield Units")
-		# plt.ylabel("Frequency")
-		# plt.xticks([0, 13, 15, 20, 20, 35, 37, 40, 45, 50, 65, 75, 85, 100])
-		# #plt.xticks([-100, 0, 350], ['Fat (-100)', "water - (0)", "Bone - (350)"])#, rotation=90)
-		# plt.show()
 
+	def histogram_w_restriction(self, im):
+		# most important section of data
+		scaled = self.scale_to_hu(im)
+		scaled = scaled.astype(np.int16)
+		plt.hist(scaled.flatten(), bins=200, range=(0, 100))
+		plt.xlabel("Hounstfield Units")
+		plt.ylabel("Frequency")
+		plt.xticks([0, 13, 15, 20, 20, 35, 37, 40, 45, 50, 65, 75, 85, 100])
+		#plt.xticks([-100, 0, 350], ['Fat (-100)', "water - (0)", "Bone - (350)"])#, rotation=90)
+		plt.show()
 
 
 if __name__ == '__main__':
@@ -84,8 +85,10 @@ if __name__ == '__main__':
 	im1 = di.load_Dicom(f1)
 	di.show_Dicom(im1)
 	di.histogram(im1)
+	di.histogram_w_restriction(im1)
 	f2 = "ID_000a2d7b0.dcm"
 	im2 = di.load_Dicom(f2)
 	di.show_Dicom(im2)
 	di.histogram(im2)
+	di.histogram_w_restriction(im2)
 
