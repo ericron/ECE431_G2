@@ -2,6 +2,7 @@ from pathlib import Path
 import pydicom
 import matplotlib.pyplot as plt
 import numpy as np
+from preprocessing import Preprocessing
 
 
 class DicomImage:
@@ -19,6 +20,9 @@ class DicomImage:
 			im = None
 		self.dicom_images.append(im)
 		return im
+
+	def dicom_to_np_array(self, dicom_image):
+		return dicom_image.pixel_array
 
 	def show_Dicom(self, dicom_image):
 		"""
@@ -81,14 +85,19 @@ class DicomImage:
 if __name__ == '__main__':
 	folder = "exampleImages_S00"
 	di = DicomImage(folder)
+	pp = Preprocessing()
 	f1 = "ID_000000e27.dcm"
 	im1 = di.load_Dicom(f1)
-	di.show_Dicom(im1)
-	di.histogram(im1)
-	di.histogram_w_restriction(im1)
+	# di.show_Dicom(im1)
+	# di.histogram(im1)
+	# di.histogram_w_restriction(im1)
+	arr1 = di.dicom_to_np_array(im1)
+	pp.resize(arr1, (350, 350))
 	f2 = "ID_000a2d7b0.dcm"
 	im2 = di.load_Dicom(f2)
-	di.show_Dicom(im2)
-	di.histogram(im2)
-	di.histogram_w_restriction(im2)
+	# di.show_Dicom(im2)
+	# di.histogram(im2)
+	# di.histogram_w_restriction(im2)
+	arr2 = di.dicom_to_np_array(im2)
+	pp.resize(arr2, (350, 350))
 
