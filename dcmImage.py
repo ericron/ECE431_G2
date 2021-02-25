@@ -2,6 +2,8 @@ from pathlib import Path
 import pydicom
 import matplotlib.pyplot as plt
 import numpy as np
+import os
+import pandas as pd
 
 
 class DicomImage:
@@ -77,6 +79,26 @@ class DicomImage:
 		#plt.xticks([-100, 0, 350], ['Fat (-100)', "water - (0)", "Bone - (350)"])#, rotation=90)
 		plt.show()
 
+	def export_patient_ids(self,folder):
+		"""
+		Exports all patient IDs from each image to a CSV
+		:param folder : folder name string
+		:return ids : string array
+		"""
+		ids = []  									# Empty Array to store Patient IDs
+		for filename in os.listdir(folder):			# Iterates through each image
+			if filename.endswith(".dcm"):
+				temp_im = self.load_Dicom(filename)		# Loads the next image
+				ids.append(temp_im.PatientID)		# Appends the image's PatientID to ids array
+				continue
+			else:
+				continue
+		np.array(ids)								# Convert to Numpy Array
+		df = pd.DataFrame(ids)						# Convert to Pandas DataFrame
+		df.to_csv("patientIDs.csv", header=False)	# Export DataFrame to CSV file. DO NOT have .csv file open elsewhere
+		# No header, indexes present
+		return ids
+
 
 if __name__ == '__main__':
 	folder = "exampleImages_S00"
@@ -91,4 +113,5 @@ if __name__ == '__main__':
 	di.show_Dicom(im2)
 	di.histogram(im2)
 	di.histogram_w_restriction(im2)
+	di.export_patientIDs(folder)
 
