@@ -107,20 +107,15 @@ class DicomImage:
 if __name__ == '__main__':
 	folder = "exampleImages_S00"
 	di = DicomImage(folder)
-	pp = Preprocessing()
+	pp = Preprocessing(di)
 	f1 = "ID_000000e27.dcm"
 	im1 = di.load_Dicom(f1)
 	# di.show_Dicom(im1)
-	# di.histogram(im1)
-	# di.histogram_w_restriction(im1)
-	arr1 = di.dicom_to_np_array(im1)
-	pp.resize(arr1, (350, 350))
+	pp.make_mask(im1, display=True)
+
 	f2 = "ID_000a2d7b0.dcm"
 	im2 = di.load_Dicom(f2)
-	arr2 = di.dicom_to_np_array(im2)
-	pp.resize(arr2, (350, 350))
-	di.show_Dicom(im2)
-	di.histogram(im2)
-	di.histogram_w_restriction(im2)
-	di.export_patientIDs(folder)
+	# di.show_Dicom(im2)
+	# di.export_patient_ids(folder)
+	pp.make_mask(im2, display=True)
 

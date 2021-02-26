@@ -26,6 +26,7 @@ class CSVFile:
 			name = name[0] + '_' + name[1]
 			vals = list(df['Label'])
 			results.append(name)
+			# TODO: Check what is 1 and 0. Add only selectable types of hemorrhaging
 			for a in range(len(vals)):
 				results.append(vals[a])
 			# TODO: Inefficient - requries making an extra dataframe - not good for large files
