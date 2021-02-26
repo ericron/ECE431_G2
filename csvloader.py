@@ -37,7 +37,24 @@ class CSVFile:
 		print(new_dataframe)
 		self.csv_files = [new_dataframe]
 
+    def index_two_types(self, hem_type1, hem_type2):  # Gives index of only two hemorrhage types
+        # TODO Improve to have flexibility with number of types able to be inputted.
+        temp_df = self.csv_files.copy()
+        temp_df = temp_df[['ID', hem_type1, hem_type2]]
+        temp_df_np = temp_df.to_numpy()
+        self.index_type1 = []
+        self.index_type2 = []
+        i = 0
+        for rows in temp_df_np:
+            if temp_df_np[i][1] == 1:
+                self.index_type1.append(i)
+            if temp_df_np[i][2] == 1:
+                self.index_type2.append(i)
+            i = i + 1
 
 if __name__ == '__main__':
-	csv = CSVFile()
-	csv.load_CVS("stage_2_train.csv")
+    csv = CSVFile()
+    csv.load_CVS("stage_2_train.csv")
+    csv.index_two_types('intraparenchymal', 'intraventricular')
+    print("intraparenchymal index: ", csv.index_type1)
+    print("intraventricular index: ", csv.index_type2)
