@@ -8,7 +8,7 @@ import pandas as pd
 class CSVFile:
 	def __init__(self):
 		self.home_path = Path.cwd()
-		self.csv_files = []
+		self.csv_files = pd.DataFrame()
 
 	def load_CVS(self, filename):
 		path = self.home_path / filename
@@ -35,7 +35,7 @@ class CSVFile:
 			if i >= 1000:
 				break
 		print(new_dataframe)
-		self.csv_files = [new_dataframe]
+		self.csv_files = new_dataframe.copy()
 
     def index_two_types(self, hem_type1, hem_type2):  # Gives index of only two hemorrhage types
         # TODO Improve to have flexibility with number of types able to be inputted.
