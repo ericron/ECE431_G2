@@ -3,6 +3,8 @@ import pydicom
 import matplotlib.pyplot as plt
 import numpy as np
 from preprocessing import Preprocessing
+import os
+import pandas as pd
 
 
 class DicomImage:
@@ -81,23 +83,39 @@ class DicomImage:
 		#plt.xticks([-100, 0, 350], ['Fat (-100)', "water - (0)", "Bone - (350)"])#, rotation=90)
 		plt.show()
 
+	def export_patient_ids(self,folder):
+		"""
+		Exports all patient IDs from each image to a CSV
+		:param folder : folder name string
+		:return ids : string array
+		"""
+		ids = []  									# Empty Array to store Patient IDs
+		for filename in os.listdir(folder):			# Iterates through each image
+			if filename.endswith(".dcm"):
+				temp_im = self.load_Dicom(filename)		# Loads the next image
+				ids.append(temp_im.PatientID)		# Appends the image's PatientID to ids array
+				continue
+			else:
+				continue
+		np.array(ids)								# Convert to Numpy Array
+		df = pd.DataFrame(ids)						# Convert to Pandas DataFrame
+		df.to_csv("patientIDs.csv", header=False)	# Export DataFrame to CSV file. DO NOT have .csv file open elsewhere
+		# No header, indexes present
+		return ids
+
 
 if __name__ == '__main__':
 	folder = "exampleImages_S00"
 	di = DicomImage(folder)
-	pp = Preprocessing()
+	pp = Preprocessing(di)
 	f1 = "ID_000000e27.dcm"
 	im1 = di.load_Dicom(f1)
 	# di.show_Dicom(im1)
-	# di.histogram(im1)
-	# di.histogram_w_restriction(im1)
-	arr1 = di.dicom_to_np_array(im1)
-	pp.resize(arr1, (350, 350))
+	pp.make_mask(im1, display=True)
+
 	f2 = "ID_000a2d7b0.dcm"
 	im2 = di.load_Dicom(f2)
 	# di.show_Dicom(im2)
-	# di.histogram(im2)
-	# di.histogram_w_restriction(im2)
-	arr2 = di.dicom_to_np_array(im2)
-	pp.resize(arr2, (350, 350))
+	# di.export_patient_ids(folder)
+	pp.make_mask(im2, display=True)
 
