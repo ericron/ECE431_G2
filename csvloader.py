@@ -1,8 +1,8 @@
 from pathlib import Path
 import pandas as pd
+import shutil
 import time
 
-# TODO: in combination with DicomImage, pull metadata from images and add to excel files
 
 class CSVFile:
 	def __init__(self):
@@ -44,7 +44,7 @@ class CSVFile:
 				new_dataframe.loc[len(new_dataframe.index)] = results
 			i += 1
 			# approx: 0.004 x 10^x seconds for 10^x loops
-			if i >= 10**3:
+			if i >= 10 ** 2:
 				break
 		pd.set_option('display.max_columns', None)
 		return new_dataframe
@@ -56,7 +56,7 @@ class CSVFile:
 		:param types: list of types of hemorrhaging to include in the dataframe
 		:return: empty dataframe with column of labels, and limiter - list of active data
 		"""
-		limiter = [False, False, False, False, False, True]     # always 'add' any column
+		limiter = [False, False, False, False, False, True]  # always 'add' any column
 		if 'epidural' in types:
 			limiter[0] = True
 		if 'intraparenchymal' in types:
@@ -82,12 +82,58 @@ class CSVFile:
 		"""
 		index_types = {}
 		for i in range(len(df.columns[1:])):
-			index_types[df.columns[i+1]] = []
+			index_types[df.columns[i + 1]] = []
 		for index, row in df.iterrows():
 			for i in range(len(df.columns[1:])):
-				if row[df.columns[i+1]] == 1:
+				if row[df.columns[i + 1]] == 1:
 					index_types[df.columns[i + 1]].append(row['ID'])
 		return index_types
+
+	def save_dataframe_as_csv(self, df, filename):
+		"""
+		Saves dataframe as a CSV file
+		:param df: dataframe
+		:param filename: Name of CSV file
+		:return: None
+		"""
+		df.to_csv(filename, index=False)
+
+	def index_types_to_dataset(self, dicom_location, new_dataset_location, dict, subdirectory=False):
+		keys = list(dict.keys())
+		for i in range(len(keys)):
+			hem_type = str(keys[i])
+			list_ids = dict[keys[i]]
+			if subdirectory:
+				new_data_loc = new_dataset_location / hem_type
+				self.create_dataset(dicom_location, new_data_loc, list_ids)
+			else:
+				if not hem_type == 'any':
+					self.create_dataset(dicom_location, new_dataset_location, list_ids)
+
+	def create_dataset(self, dicom_location, new_dataset_location, IDs):
+		"""
+		Copys dicom image from dicom_location to new_dataset_location of dicom images contained
+		in list IDs
+		:param dicom_location: pathlib Path of current dicom image location
+		:param new_dataset_location: pathlib Path of location to copy dicom images to
+		:param IDs: list of dicom image IDs (no .dcm on end). format example: ['ID_000af28ac',]
+		:return: None
+		"""
+		if dicom_location.is_dir():
+			new_dataset_location.mkdir(exist_ok=True)
+			for f in IDs:
+				filename = f + '.dcm'
+				cur_loc = dicom_location / filename
+				if cur_loc.is_file():
+					future_loc = new_dataset_location / filename
+					if not future_loc.exists():
+						shutil.copy(cur_loc, future_loc)
+					else:
+						print("Error: Dicom image file already exists")
+				else:
+					print("Error: Dicom image file could not be found")
+		else:
+			print("Error: Dicom image location folder does not exist")
 
 
 if __name__ == '__main__':
@@ -98,4 +144,15 @@ if __name__ == '__main__':
 	print(train_data.head(4))
 	dic_of_IDs = csv.index_types(train_data)
 	print(dic_of_IDs)
+	csv_filename = 'intrapar_intravent_train.csv'
+	csv.save_dataframe_as_csv(train_data, csv_filename)
+
+	# test_dic = {'intraparenchymal': ["ID_000a2d7b0", "ID_000a8710b", "ID_000a50137", "ID_000bf8860", "ID_000000e27"],
+	#             'intraventricular': ["ID_000af28ac", "ID_000b220f4", "ID_000bda502"],
+	#             'any': ["ID_000a2d7b0", "ID_000a8710b", "ID_000a50137", "ID_000af28ac", "ID_000b220f4", "ID_000bda502",
+	#              "ID_000bf8860", "ID_000000e27"]}
+	# test_dic for folder "exampleImages_S00"
+	dic_loc = Path.cwd() / "exampleImages_S00"
+	new_data_loc = Path.cwd() / "testFolder"
+	csv.index_types_to_dataset(dic_loc, new_data_loc, dic_of_IDs)
 	print("CSVloader Run Time:", time.time() - start_time, "Seconds")
