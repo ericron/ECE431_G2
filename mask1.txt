@@ -1,0 +1,74 @@
+def scale_to_hu(im):
+		"""
+		Converts DICOM image to numpy array in Hounsfield Units
+		:param im: DICOM image
+		:return: numpy array
+		"""
+		arr = im.pixel_array.astype(np.int16)
+		b = im.RescaleIntercept
+		m = im.RescaleSlope
+		arr = m*arr + b
+		return arr
+
+from pathlib import Path
+import pydicom
+import matplotlib.pyplot as plt
+import numpy as np
+import cv2 as cv
+import numpy.ma as ma
+import scipy.ndimage
+from skimage import morphology
+from skimage import measure
+from skimage.transform import resize
+
+
+
+def make_mask(imageArray, display=False):
+    imghound=scale_to_hu(imageArray)
+    okay=imageArray.pixel_array
+    kernel = np.ones((7,7),np.uint8)
+    erosion = cv.erode(imghound,kernel,iterations = 2)
+    kernel2 = np.ones((20,20),np.uint8)
+    dilate = cv.dilate(erosion,kernel2,iterations = 2)
+    threshhold=np.where(dilate<-500,0,1)
+  
+    
+
+    mask = morphology.area_closing(threshhold, 100000, connectivity=1)
+    
+
+    final =  okay*mask
+  
+  #replace okay with imghound
+
+    #print(imghound)
+    print(final[250])
+
+    #print(closed)
+
+   
+
+    if (display):
+        fig, ax = plt.subplots(3, 2, figsize=[12, 12])
+        ax[0, 0].set_title("Original")
+        ax[0, 0].imshow(okay, cmap='gray')
+        ax[0, 0].axis('off')
+        ax[0, 1].set_title("Erosion")
+        ax[0, 1].imshow(erosion, cmap='gray')
+        ax[0, 1].axis('off')
+        ax[1, 0].set_title("Dilation")
+        ax[1, 0].imshow(dilate, cmap='gray')
+        ax[1, 0].axis('off')
+        ax[1, 1].set_title("Threshold")
+        ax[1, 1].imshow(threshhold, cmap='gray')
+        ax[1, 1].axis('off')
+        ax[2, 0].set_title("Mask")
+        ax[2, 0].imshow(mask, cmap='gray')
+        ax[2, 0].axis('off')
+        ax[2, 1].set_title("Masked Image")
+        ax[2, 1].imshow(final), cmap='gray')
+        ax[2, 1].axis('off')
+
+brain=pydicom.dcmread("file")
+
+make_mask(brain, display=True)
