@@ -11,7 +11,6 @@ class DicomImage:
 	def __init__(self, folder):
 		self.home_path = Path.cwd()
 		self.dicom_image_folder = folder
-		self.dicom_images = []
 
 	def load_Dicom(self, filename):
 		path = self.home_path / self.dicom_image_folder / filename
@@ -20,7 +19,6 @@ class DicomImage:
 		except Exception as e:
 			print("Error: ", e)
 			im = None
-		self.dicom_images.append(im)
 		return im
 
 	def dicom_to_np_array(self, dicom_image):
@@ -34,6 +32,14 @@ class DicomImage:
 		"""
 		arr = dicom_image.pixel_array
 		plt.imshow(arr, cmap='gray')
+		plt.show()
+
+	def show_array(self, array):
+		"""
+		Displays array as image
+		:param array: numpy array
+		"""
+		plt.imshow(array, cmap='gray')
 		plt.show()
 
 	def scale_to_hu(self, im):
@@ -111,11 +117,15 @@ if __name__ == '__main__':
 	f1 = "ID_000000e27.dcm"
 	im1 = di.load_Dicom(f1)
 	# di.show_Dicom(im1)
-	pp.make_mask(im1, display=True)
+	final_im1, mask1 = pp.make_mask(im1, display=False)
+	di.show_array(np.array(final_im1))
+	arr1 = pp.crop(np.array(final_im1), mask1)
+	di.show_array(arr1)
+	arr1 = pp.resize(arr1, (161, 161))
 
-	f2 = "ID_000a2d7b0.dcm"
-	im2 = di.load_Dicom(f2)
+	# f2 = "ID_000a2d7b0.dcm"
+	# im2 = di.load_Dicom(f2)
 	# di.show_Dicom(im2)
 	# di.export_patient_ids(folder)
-	pp.make_mask(im2, display=True)
+	# pp.make_mask(im2, display=True)
 
