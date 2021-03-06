@@ -15,20 +15,36 @@ class Preprocessing:
 	def __init__(self, dcmImage_ID):
 		self.dcmImage_ID = dcmImage_ID
 
-	def resize(self, array, new_size):
+	def resize(self, array, new_size, display=True, histogram=True):
 		# TODO: add a smoothing element to rezise
-		# interpolation types: INTER_NEAREST, INTER_LINEAR, INTER_AREA, INTER_CUBIC, INTER_LANCZOS4
-		resized = cv2.resize(array, new_size, interpolation=cv2.INTER_LANCZOS4)
-		print("Original:", array.shape, "Resized:", resized.shape)
-		fig, ax = plt.subplots(1, 2)  # figsize=[12, 12])
-		ax[0].set_title("Original")
-		ax[0].imshow(np.array(array), cmap='gray')
-		ax[0].axis('off')
-		ax[1].set_title("Resized")
-		ax[1].imshow(resized, cmap='gray')
-		ax[1].axis('off')
-		plt.show()
-		return resized
+		ski_res = resize(array, new_size, preserve_range=True, anti_aliasing=True)
+		# ski_res = ski_res.astype('int32')
+
+		# interpolation types: INTER_NEAREST, INTER_LINEAR, INTER_AREA, INTER_CUBIC, INTER_LANCZOS4 - best
+		# resized = cv2.resize(array, new_size, interpolation=cv2.INTER_AREA)
+
+		if histogram:
+			fig, ax = plt.subplots(1, 2, figsize=[12, 6])
+			ax[0].set_title("Original Image")
+			ax[0].hist(array.flatten(), bins=50, range=(array.min(), array.max()))
+			ax[0].set_yscale("log")
+			ax[1].set_title("Resized Image")
+			ax[1].hist(ski_res.flatten(), bins=50, range=(ski_res.min(), ski_res.max()))
+			ax[1].set_yscale("log")
+			plt.tight_layout()
+			plt.show()
+
+		if display:
+			fig, ax = plt.subplots(1, 2, figsize=[12, 6])
+			ax[0].set_title("Original Image")
+			ax[0].imshow(array, cmap='gray')
+			ax[0].axis('off')
+			ax[1].set_title("Resized Image")
+			ax[1].imshow(ski_res, cmap='gray')
+			ax[1].axis('off')
+			plt.tight_layout()
+			plt.show()
+		return ski_res
 
 	def make_mask(self, imageArray, display=False):
 		imghound = self.dcmImage_ID.scale_to_hu(imageArray)
@@ -66,7 +82,7 @@ class Preprocessing:
 		return final, mask
 
 	def crop(self, array, mask):
-		pad = 4
+		pad = 0
 		row, col = array.shape
 		row_min, row_max, col_min, col_max = self.find_edges(mask)
 		row_temp = row_max - row_min
@@ -92,11 +108,11 @@ class Preprocessing:
 		col_min = 0
 		col_max = col - 1
 		for i in range(row):
-			if 0 in mask_array[i]:
+			if 1 in mask_array[i]:
 				row_min = i
 				break
 		for j in range(row):
-			if 0 in mask_array[row - j - 1]:
+			if 1 in mask_array[row - j - 1]:
 				row_max = row - j - 1
 				break
 		c = []
@@ -107,11 +123,11 @@ class Preprocessing:
 			r.append(i)
 		df = pd.DataFrame(mask_array, columns=c, index=r)
 		for i in range(len(df.columns)):
-			if 0 in list(df[i]):
+			if 1 in list(df[i]):
 				col_min = i
 				break
 		for j in range(len(df.columns)):
-			if 0 in list(df[col - j - 1]):
+			if 1 in list(df[col - j - 1]):
 				col_max = col - j - 1
 				break
 		return row_min, row_max, col_min, col_max

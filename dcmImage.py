@@ -118,10 +118,10 @@ if __name__ == '__main__':
 	im1 = di.load_Dicom(f1)
 	# di.show_Dicom(im1)
 	final_im1, mask1 = pp.make_mask(im1, display=False)
-	di.show_array(np.array(final_im1))
+	# di.show_array(np.array(final_im1))
 	arr1 = pp.crop(np.array(final_im1), mask1)
-	di.show_array(arr1)
-	arr1 = pp.resize(arr1, (161, 161))
+	# di.show_array(arr1)
+	arr1 = pp.resize(arr1, (200, 200))
 
 	# f2 = "ID_000a2d7b0.dcm"
 	# im2 = di.load_Dicom(f2)
