@@ -5,6 +5,10 @@ import numpy as np
 import cv2
 import numpy as np
 import numpy.ma as ma
+import scipy.ndimage
+from skimage import morphology
+from skimage import measure
+from skimage.transform import resize
 
 
 class Preprocessing:
@@ -26,28 +30,36 @@ class Preprocessing:
 
 	def make_mask(self, imageArray, display=False):
 		imghound = self.dcmImage_ID.scale_to_hu(imageArray)
-		kernel = np.ones((8, 8), np.uint8)
+		okay = imageArray.pixel_array
+		kernel = np.ones((7, 7), np.uint8)
 		erosion = cv2.erode(imghound, kernel, iterations=2)
-		threshhold = np.where(erosion < -500, 0, 1)
-		mask = np.where(threshhold < 0.5, 1, 0)
-		final = ma.masked_array(imghound, mask)
+		kernel2 = np.ones((20, 20), np.uint8)
+		dilate = cv2.dilate(erosion, kernel2, iterations=2)
+		threshhold = np.where(dilate < -500, 0, 1)
+		mask = morphology.area_closing(threshhold, 100000, connectivity=1)
+		# replace okay with imghound
+		final = okay * mask
+
 		if (display):
 			fig, ax = plt.subplots(3, 2, figsize=[12, 12])
 			ax[0, 0].set_title("Original")
-			ax[0, 0].imshow(imghound, cmap='gray')
+			ax[0, 0].imshow(okay, cmap='gray')
 			ax[0, 0].axis('off')
 			ax[0, 1].set_title("Erosion")
 			ax[0, 1].imshow(erosion, cmap='gray')
 			ax[0, 1].axis('off')
-			ax[1, 0].set_title("Threshold")
-			ax[1, 0].imshow(threshhold, cmap='gray')
+			ax[1, 0].set_title("Dilation")
+			ax[1, 0].imshow(dilate, cmap='gray')
 			ax[1, 0].axis('off')
-			ax[1, 1].set_title("Mask")
-			ax[1, 1].imshow(mask, cmap='gray')
+			ax[1, 1].set_title("Threshold")
+			ax[1, 1].imshow(threshhold, cmap='gray')
 			ax[1, 1].axis('off')
-			ax[2, 0].set_title("Masked Image")
-			ax[2, 0].imshow(final, cmap='gray')
+			ax[2, 0].set_title("Mask")
+			ax[2, 0].imshow(mask, cmap='gray')
 			ax[2, 0].axis('off')
+			ax[2, 1].set_title("Masked Image")
+			ax[2, 1].imshow(final, cmap='gray')
+			ax[2, 1].axis('off')
 			plt.show()
 		return final
 
