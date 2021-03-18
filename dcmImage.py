@@ -11,7 +11,6 @@ class DicomImage:
 	def __init__(self, folder):
 		self.home_path = Path.cwd()
 		self.dicom_image_folder = folder
-		self.dicom_images = []
 
 	def load_Dicom(self, filename):
 		path = self.home_path / self.dicom_image_folder / filename
@@ -20,7 +19,6 @@ class DicomImage:
 		except Exception as e:
 			print("Error: ", e)
 			im = None
-		self.dicom_images.append(im)
 		return im
 
 	def dicom_to_np_array(self, dicom_image):
@@ -32,8 +30,16 @@ class DicomImage:
 		:param dicom_image: DICOM image
 		:return: None
 		"""
-		arr = dicom_image.pixel_array
+		arr = self.dicom_to_np_array(dicom_image)
 		plt.imshow(arr, cmap='gray')
+		plt.show()
+
+	def show_array(self, array):
+		"""
+		Displays array as image
+		:param array: numpy array
+		"""
+		plt.imshow(array, cmap='gray')
 		plt.show()
 
 	def scale_to_hu(self, im):
@@ -42,10 +48,18 @@ class DicomImage:
 		:param im: DICOM image
 		:return: numpy array
 		"""
-		arr = im.pixel_array.astype(np.int16)
-		b = im.RescaleIntercept
-		m = im.RescaleSlope
+		arr = self.dicom_to_np_array(im)
+		b = int(im.RescaleIntercept)
+		m = int(im.RescaleSlope)
+		if m != 1:
+			raise Exception("Rescale Slope is not 1. May cause type issue")
 		arr = m*arr + b
+		oldmax = np.max(arr)
+		oldmin = np.min(arr)
+		# there should be no reduction/scaling as a result of conversion to type int16
+		arr = arr.astype(np.int16)
+		if np.max(arr) != oldmax or np.min(arr) != oldmin:
+			raise Exception("Rescaling Numpy array caused data conversion. Possible issue.")
 		return arr
 
 	def analyze_image(self, im):
@@ -110,12 +124,16 @@ if __name__ == '__main__':
 	pp = Preprocessing(di)
 	f1 = "ID_000000e27.dcm"
 	im1 = di.load_Dicom(f1)
-	# di.show_Dicom(im1)
-	pp.make_mask(im1, display=True)
+	#di.show_Dicom(im1)
+	final_im1, mask1 = pp.make_mask(im1, display=False)
+	# di.show_array(np.array(final_im1))
+	# arr1 = pp.crop(np.array(final_im1), mask1)
+	# di.show_array(arr1)
+	# arr1 = pp.resize(arr1, (200, 200))
 
-	f2 = "ID_000a2d7b0.dcm"
-	im2 = di.load_Dicom(f2)
+	# f2 = "ID_000a2d7b0.dcm"
+	# im2 = di.load_Dicom(f2)
 	# di.show_Dicom(im2)
 	# di.export_patient_ids(folder)
-	pp.make_mask(im2, display=True)
+	# pp.make_mask(im2, display=True)
 
