@@ -7,6 +7,7 @@ import time
 class CSVFile:
 	def __init__(self):
 		self.home_path = Path.cwd()
+		self.only_neg = None
 
 	def load_CSV(self, filepath, filename, types):
 		"""
@@ -31,7 +32,7 @@ class CSVFile:
 		new_dataframe.reset_index(drop=True, inplace=True)
 		return new_dataframe
 
-	def load_CSV_for_mod(self, filepath, filename, types, pos_id):
+	def load_CSV_for_mod(self, filepath, filename, types, pos_id, only_neg):
 		"""
 		type options: ['epidural', 'intraparenchymal', 'intraventricular', 'subarachnoid', 'subdural', 'add']
 		*empty types list results in dataframe of 'ID'
@@ -42,6 +43,7 @@ class CSVFile:
 		:return: dataframe of CSV file
 		"""
 		path = filepath / filename
+		self.only_neg = only_neg
 		i = 0
 		vals = []
 		results = []
@@ -58,19 +60,35 @@ class CSVFile:
 			for a in range(len(vals)):
 				if limiter[a]:
 					results.append(vals[a])
-			if pos_id and len(results) > 2:
-				if 1 in results[1:-1]:
-					new_dataframe.loc[len(new_dataframe.index)] = results
-			elif pos_id and len(results) == 2:
-				if results[1] == 1:
+			if only_neg:
+				if len(results) > 2:
+					if 0 in results[1:-1]:
+						i += 1
+						new_dataframe.loc[len(new_dataframe.index)] = results
+				elif len(results) == 2:
+					if results[1] == 0:
+						i += 1
+						new_dataframe.loc[len(new_dataframe.index)] = results
+				else:
+					i += 1
 					new_dataframe.loc[len(new_dataframe.index)] = results
 			else:
-				new_dataframe.loc[len(new_dataframe.index)] = results
-			i += 1
+				if pos_id and len(results) > 2:
+					if 1 in results[1:-1]:
+						i += 1
+						new_dataframe.loc[len(new_dataframe.index)] = results
+				elif pos_id and len(results) == 2:
+					if results[1] == 1:
+						i += 1
+						new_dataframe.loc[len(new_dataframe.index)] = results
+				else:
+					i += 1
+					new_dataframe.loc[len(new_dataframe.index)] = results
+			#i += 1
 			# approx: 0.004 x 10^x seconds for 10^x loops
 			# aprox 2x that to actually move images
-			# if i >= 10 ** 2:
-			# 	break
+			if i >= 1000: #12500:
+				break
 		pd.set_option('display.max_columns', None)
 		return new_dataframe
 
@@ -106,12 +124,20 @@ class CSVFile:
 		:return: dictionary of image IDs for each type of hemorrhaging
 		"""
 		index_types = {}
-		for i in range(len(df.columns[1:])):
-			index_types[df.columns[i + 1]] = []
-		for index, row in df.iterrows():
+		if self.only_neg:
 			for i in range(len(df.columns[1:])):
-				if row[df.columns[i + 1]] == 1:
-					index_types[df.columns[i + 1]].append(row['ID'])
+				index_types[df.columns[i + 1]] = []
+			for index, row in df.iterrows():
+				for i in range(len(df.columns[1:])):
+					if row[df.columns[i + 1]] == 0:
+						index_types[df.columns[i + 1]].append(row['ID'])
+		else:
+			for i in range(len(df.columns[1:])):
+				index_types[df.columns[i + 1]] = []
+			for index, row in df.iterrows():
+				for i in range(len(df.columns[1:])):
+					if row[df.columns[i + 1]] == 1:
+						index_types[df.columns[i + 1]].append(row['ID'])
 		return index_types
 
 	def img_ids_w_labels(self, df, hem_type):
@@ -143,8 +169,8 @@ class CSVFile:
 				new_data_loc = new_dataset_location / hem_type
 				self.create_dataset(dicom_location, new_data_loc, list_ids)
 			else:
-				if not hem_type == 'any':
-					self.create_dataset(dicom_location, new_dataset_location, list_ids)
+				# if not hem_type == 'any':
+				self.create_dataset(dicom_location, new_dataset_location, list_ids)
 
 	def create_dataset(self, dicom_location, new_dataset_location, IDs):
 		"""
@@ -175,12 +201,12 @@ class CSVFile:
 if __name__ == '__main__':
 	start_time = time.time()
 	csv = CSVFile()
-	type_list = ['intraparenchymal']
+	type_list = ['any']
 	home_path = Path.cwd()
-	train_data = csv.load_CSV_for_mod(home_path, "stage_2_train.csv", type_list, pos_id=True)
+	train_data = csv.load_CSV_for_mod(home_path, "stage_2_train.csv", type_list, pos_id=False, only_neg=True)
 	print(train_data.head(4))
 	dic_of_IDs = csv.index_types(train_data)
-	csv_filename = 'intraparenchymal_train.csv'
+	csv_filename = 'no_hemorrhage.csv'
 	csv.save_dataframe_as_csv(train_data, csv_filename)
 
 	# test_dic = {'intraparenchymal': ["ID_000a2d7b0", "ID_000a8710b", "ID_000a50137", "ID_000bf8860", "ID_000000e27"],
@@ -193,6 +219,6 @@ if __name__ == '__main__':
 	dic_loc = Path('E:/', 'rsna-intracranial-hemorrhage-detection', 'rsna-intracranial-hemorrhage-detection',
 	               'stage_2_train')
 	# new_data_loc = Path.cwd() / "intrapar_intravent_train_im"
-	new_data_loc = Path('C:/', 'Users', 'ryanb', 'Desktop', 'ECE 431 Project', 'intraparenchymal_train')
+	new_data_loc = Path('C:/', 'Users', 'ryanb', 'Desktop', 'ECE 431 Project', 'no_hemorrhage')
 	csv.index_types_to_dataset(dic_loc, new_data_loc, dic_of_IDs)
 	print("CSVloader Run Time:", time.time() - start_time, "Seconds")
