@@ -1,0 +1,15 @@
+    def channelsplit(img)    
+    
+    Channel1 = img.copy()
+    Channel1[Channel1<-100]= 0
+    Channel1[Channel1>75] = 0
+
+    Channel2 = img.copy()
+    Channel2[Channel2<75]= 0
+    Channel2[Channel2>300] = 0
+    
+    Channel3 = img.copy()
+    Channel3[Channel3<300]= 0
+    Channel3[Channel3>3000] = 0
+    Channel3 = Channel3/11
+    Channel3 = Channel3.astype(np.int8)
