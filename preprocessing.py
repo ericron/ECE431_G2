@@ -81,6 +81,60 @@ class Preprocessing:
 			plt.show()
 		return final, mask
 
+	def channel_split(self, img):
+		Channel1 = img.copy()
+		Channel1[Channel1 < -170] = -175
+		Channel1[Channel1 > 75] = -175  # 80
+		Channel1 += 175
+		Channel1 = Channel1.astype(np.uint8)
+
+		Channel2 = img.copy()
+		Channel2[Channel2 < 75] = 70
+		Channel2[Channel2 > 300] = 70   # 325
+		Channel2 -= 70
+		Channel2 = Channel2.astype(np.uint8)
+
+		Channel3 = img.copy()
+		Channel3[Channel3 < 300] = 280
+		Channel3[Channel3 > 2300] = 2300
+		Channel3 = Channel3 - 280
+		Channel3 = Channel3 / 8
+		Channel3 = Channel3.astype(np.uint8)
+
+		# self.display_channel_split(img, Channel1, Channel2, Channel3)
+		img_3_channels = np.dstack((Channel1, Channel2, Channel3))
+		print(img_3_channels.shape)
+		print(type(img_3_channels), img_3_channels.dtype)
+		plt.imshow(img_3_channels)
+		plt.show()
+		return img_3_channels
+
+	@staticmethod
+	def display_channel_split(OrigImg, Channel1, Channel2, Channel3):
+		fig, ax = plt.subplots(2, 4, figsize=[12, 12])
+		ax[0, 0].set_title("Original Image")
+		ax[0, 0].imshow(OrigImg, cmap='gray')
+		ax[0, 0].axis('off')
+		ax[0, 1].set_title("Channel 1")
+		ax[0, 1].imshow(Channel1, cmap='gray')
+		ax[0, 1].axis('off')
+		ax[0, 2].set_title("Channel 2")
+		ax[0, 2].imshow(Channel2, cmap='gray')
+		ax[0, 2].axis('off')
+		ax[0, 3].set_title("Channel 3")
+		ax[0, 3].imshow(Channel3, cmap='gray')
+		ax[0, 3].axis('off')
+		ax[1, 0].hist(OrigImg.flatten(), bins=250, range=(OrigImg.min(), OrigImg.max()))
+		ax[1, 0].set_yscale('log')
+		ax[1, 1].hist(Channel1.flatten(), bins=250, range=(Channel1.min(), Channel1.max()))
+		ax[1, 1].set_yscale('log')
+		ax[1, 2].hist(Channel2.flatten(), bins=225, range=(Channel2.min(), Channel2.max()))
+		ax[1, 2].set_yscale('log')
+		ax[1, 3].hist(Channel3.flatten(), bins=140, range=(Channel3.min(), Channel3.max()))
+		ax[1, 3].set_yscale('log')
+		plt.tight_layout()
+		plt.show()
+
 	def crop(self, array, mask):
 		pad = 0
 		row, col = array.shape

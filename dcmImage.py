@@ -124,15 +124,17 @@ if __name__ == '__main__':
 	pp = Preprocessing(di)
 	f1 = "ID_000000e27.dcm"
 	im1 = di.load_Dicom(f1)
-	#di.show_Dicom(im1)
-	final_im1, mask1 = pp.make_mask(im1, display=False)
+	pp.channel_split(di.scale_to_hu(im1))
+	# di.show_Dicom(im1)
+	# final_im1, mask1 = pp.make_mask(im1, display=False)
 	# di.show_array(np.array(final_im1))
 	# arr1 = pp.crop(np.array(final_im1), mask1)
 	# di.show_array(arr1)
 	# arr1 = pp.resize(arr1, (200, 200))
 
-	# f2 = "ID_000a2d7b0.dcm"
-	# im2 = di.load_Dicom(f2)
+	f2 = "ID_000a2d7b0.dcm"
+	im2 = di.load_Dicom(f2)
+	pp.channel_split(di.scale_to_hu(im2))
 	# di.show_Dicom(im2)
 	# di.export_patient_ids(folder)
 	# pp.make_mask(im2, display=True)
