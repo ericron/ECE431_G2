@@ -8,33 +8,33 @@ import pandas as pd
 
 
 class DicomImage:
-	def __init__(self, folder):
-		self.home_path = Path.cwd()
-		self.dicom_image_folder = folder
 
-	def load_Dicom(self, filename):
-		path = self.home_path / self.dicom_image_folder / filename
+	@staticmethod
+	def load_dicom(folder_path, filename):
+		path = folder_path / filename
 		try:
-			im = pydicom.dcmread(path)
+			dicom = pydicom.dcmread(path)
 		except Exception as e:
 			print("Error: ", e)
-			im = None
-		return im
+			dicom = None
+		return dicom
 
-	def dicom_to_np_array(self, dicom_image):
-		return dicom_image.pixel_array
+	@staticmethod
+	def dicom_to_arr(dicom):
+		return dicom.pixel_array
 
-	def show_Dicom(self, dicom_image):
+	def show_dicom(self, dicom):
 		"""
 		Displays DICOM image
-		:param dicom_image: DICOM image
+		:param dicom: DICOM image
 		:return: None
 		"""
-		arr = self.dicom_to_np_array(dicom_image)
+		arr = self.dicom_to_arr(dicom)
 		plt.imshow(arr, cmap='gray')
 		plt.show()
 
-	def show_array(self, array):
+	@staticmethod
+	def show_array(array):
 		"""
 		Displays array as image
 		:param array: numpy array
@@ -42,45 +42,33 @@ class DicomImage:
 		plt.imshow(array, cmap='gray')
 		plt.show()
 
-	def scale_to_hu(self, im):
+	@staticmethod
+	def scale_to_hu(dicom):
 		"""
 		Converts DICOM image to numpy array in Hounsfield Units
 		:param im: DICOM image
 		:return: numpy array
 		"""
-		arr = self.dicom_to_np_array(im)
-		b = int(im.RescaleIntercept)
-		m = int(im.RescaleSlope)
-		if m != 1:
+		arr = dicom.pixel_array
+		intercept = int(dicom.RescaleIntercept)
+		slope = int(dicom.RescaleSlope)
+		if slope != 1:
 			raise Exception("Rescale Slope is not 1. May cause type issue")
-		arr = m*arr + b
+		arr = slope*arr + intercept
 		oldmax = np.max(arr)
 		oldmin = np.min(arr)
 		# there should be no reduction/scaling as a result of conversion to type int16
 		arr = arr.astype(np.int16)
 		if np.max(arr) != oldmax or np.min(arr) != oldmin:
 			raise Exception("Rescaling Numpy array caused data conversion. Possible issue.")
+		arr[arr < -1000] = -1000
+		arr[arr > 2300] = 2300
 		return arr
 
-	def analyze_image(self, im):
-		"""
-		prints out each values in data set ************takes a long time to run*********
-		:param im:numpy array
-		:return: None
-		"""
-		print(im.size)
-		print(im.shape)
-		values = []
-		for x in np.nditer(im):
-			if x not in values:
-				values.append(int(x))
-		values.sort()
-		print(values)
-
-	def histogram(self, im):
-		scaled = self.scale_to_hu(im)
-		scaled = scaled.astype(np.int16)
-		plt.hist(scaled.flatten(), bins=50, range=(scaled.min(), scaled.max()))
+	@staticmethod
+	def histogram(im):
+		im = im.astype(np.int16)
+		plt.hist(im.flatten(), bins=50, range=(im.min(), im.max()))
 		plt.xlabel("Hounstfield Units")
 		plt.ylabel("Frequency")
 		# plt.xticks([-1000, -105, 0, 350], ["Air", 'Fat', "water", "Bone- Cancellous"], rotation=90)
@@ -106,7 +94,7 @@ class DicomImage:
 		ids = []  									# Empty Array to store Patient IDs
 		for filename in os.listdir(folder):			# Iterates through each image
 			if filename.endswith(".dcm"):
-				temp_im = self.load_Dicom(filename)		# Loads the next image
+				temp_im = self.load_dicom(filename)		# Loads the next image
 				ids.append(temp_im.PatientID)		# Appends the image's PatientID to ids array
 				continue
 			else:
@@ -119,23 +107,26 @@ class DicomImage:
 
 
 if __name__ == '__main__':
-	folder = "exampleImages_S00"
-	di = DicomImage(folder)
-	pp = Preprocessing(di)
+	dicom_folder_path = Path.cwd() / "exampleImages_S00"
+	di = DicomImage()
+	pp = Preprocessing()
 	f1 = "ID_000000e27.dcm"
-	im1 = di.load_Dicom(f1)
-	pp.channel_split(di.scale_to_hu(im1))
-	# di.show_Dicom(im1)
-	# final_im1, mask1 = pp.make_mask(im1, display=False)
-	# di.show_array(np.array(final_im1))
-	# arr1 = pp.crop(np.array(final_im1), mask1)
+	im1 = di.load_dicom(dicom_folder_path, f1)
+	# pp.channel_split(di.scale_to_hu(im1))
+	# di.show_dicom(im1)
+	arr1 = di.scale_to_hu(im1)
+	final_im1, mask1 = pp.make_mask(arr1, display=True)
+	# di.show_array(inal_im1)
+	# arr1 = pp.crop(final_im1, mask1)
 	# di.show_array(arr1)
 	# arr1 = pp.resize(arr1, (200, 200))
 
 	f2 = "ID_000a2d7b0.dcm"
-	im2 = di.load_Dicom(f2)
-	pp.channel_split(di.scale_to_hu(im2))
-	# di.show_Dicom(im2)
+	im2 = di.load_dicom(dicom_folder_path, f2)
+	# pp.channel_split(di.scale_to_hu(im2))
+	# di.show_dicom(im2)
 	# di.export_patient_ids(folder)
-	# pp.make_mask(im2, display=True)
+	arr2 = di.scale_to_hu(im2)
+	final_im2, mask2 = pp.make_mask(arr2, display=True)
+	# di.show_array(final_im2)
 

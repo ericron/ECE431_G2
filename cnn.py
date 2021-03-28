@@ -2,15 +2,15 @@ import torch
 from dcmImage import DicomImage
 import numpy as np
 import torchvision
-
+import sys
 
 def test_torch_Tensors(np_arr):
-	np_arr = np_arr.astype(np.int16)
-	tens = torch.from_numpy(np_arr).float()
+	tens = torch.from_numpy(np_arr)
 	print(type(tens))
 	print(tens.size())
 	print(tens.dtype)
-	print(tens.device)
+	print(tens.element_size() * tens.nelement())
+	print(sys.getsizeof(tens.storage()))
 
 def torch_device():
 	try:

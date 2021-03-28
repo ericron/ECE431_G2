@@ -26,7 +26,7 @@ class CSVFile:
 			df.reset_index(drop=True, inplace=True)
 			new_dataframe = pd.concat([new_dataframe, df])
 			i += 1
-			if i >= 5:
+			if i >= 3:
 				break
 		pd.set_option('display.max_columns', None)
 		new_dataframe.reset_index(drop=True, inplace=True)
