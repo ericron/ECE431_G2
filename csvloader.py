@@ -9,10 +9,11 @@ class CSVFile:
 		self.home_path = Path.cwd()
 		self.only_neg = None
 
-	def load_CSV(self, filepath, filename, types):
+	def load_CSV(self, filepath, filename, types, count):
 		"""
 		For loading already rearagnged CSV files
 		type options: ['epidural', 'intraparenchymal', 'intraventricular', 'subarachnoid', 'subdural', 'any']
+		:param count:
 		:param filepath: path to CSV file
 		:param filename: name of CSV file
 		:param types: list of types of hemorrhaging in the CSV file, excluding any
@@ -22,11 +23,11 @@ class CSVFile:
 		path = filepath / filename
 		new_col = ['ID'] + types
 		new_dataframe = pd.DataFrame(columns=new_col)
-		for df in pd.read_csv(path, chunksize=3):
+		for df in pd.read_csv(path, chunksize=10):
 			df.reset_index(drop=True, inplace=True)
 			new_dataframe = pd.concat([new_dataframe, df])
 			i += 1
-			if i >= 3:
+			if i >= count:
 				break
 		pd.set_option('display.max_columns', None)
 		new_dataframe.reset_index(drop=True, inplace=True)
@@ -87,7 +88,7 @@ class CSVFile:
 			#i += 1
 			# approx: 0.004 x 10^x seconds for 10^x loops
 			# aprox 2x that to actually move images
-			if i >= 1000: #12500:
+			if i >= 12500: #12500:
 				break
 		pd.set_option('display.max_columns', None)
 		return new_dataframe

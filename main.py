@@ -8,12 +8,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def preprocess_Dicom(folder_path, filename, types, display=True):
+def preprocess_dicom(folder_path, csv_filename, types, save_location, count, display=False):
 	csv = CSVFile()
 	dcm = DicomImage
 	pp = Preprocessing()
-	data_frame = csv.load_CSV(folder_path, filename + ".csv", types)
-	ids_w_label = csv.img_ids_w_labels(data_frame, types)  # dictionary
+	data_frame = csv.load_CSV(folder_path, csv_filename + ".csv", types, count)
+	ids_w_label = csv.img_ids_w_labels(data_frame, types)
 	ids_list = list(ids_w_label.keys())
 	print(ids_list)
 	for i in range(len(ids_list)):
@@ -25,9 +25,10 @@ def preprocess_Dicom(folder_path, filename, types, display=True):
 		img_array = pp.resize(img_array, (480, 480))
 		img_ch3_array = pp.channel_split(img_array)
 		img_array = img_array.astype(np.int16)
-		cnn.test_torch_Tensors(img_array)
-		cnn.test_torch_Tensors(img_ch3_array)
-
+		cnn.save_numpy_as_png(img_array, ids_list[i]+"_c1", save_location)
+		cnn.save_numpy_as_png(img_ch3_array, ids_list[i]+"_c3", save_location)
+		if i % 500 == 0:
+			print(i*10, "Images have been processed")
 		if display:
 			fig, ax = plt.subplots(2, 2, figsize=[12, 6])
 			ax[0, 0].set_title("Full Image")
@@ -39,8 +40,8 @@ def preprocess_Dicom(folder_path, filename, types, display=True):
 			ax[1, 0].hist(img_array.flatten(), bins=200, range=(-170, 75))
 			ax[1, 0].set_yscale("log")
 			ax[1, 0].set_ylim(bottom=10, top=10**4)
-			ax[1, 1].hist(img_ch3_array[:,:,0].flatten(), bins=200,
-			                range=(img_ch3_array[:,:,0].min(), img_ch3_array[:,:,0].max()))
+			ax[1, 1].hist(img_ch3_array[:, :, 0].flatten(), bins=200,
+			                range=(img_ch3_array[:, :, 0].min(), img_ch3_array[:, :, 0].max()))
 			ax[1, 1].set_yscale('log')
 			ax[1, 1].set_ylim(bottom=10, top=10**4)
 			plt.tight_layout()
@@ -48,21 +49,14 @@ def preprocess_Dicom(folder_path, filename, types, display=True):
 	print("Run has ended")
 
 
-
-
 if __name__ == '__main__':
 	start_time = time.time()
 
-	a = r"C:\Users\ryanb\Desktop\ECE 431 Project\intraparenchymal"
-	dataset1_path = Path('C:/', 'Users', 'ryanb', 'Desktop', 'ECE 431 Project', 'intraparenchymal')
-	print(dataset1_path)
-	dataset1_filename = 'intraparenchymal'
+	count = 2  # multiplied by a factor of 10
+	data_location = Path('C:/', 'Users', 'ryanb', 'Desktop', 'ECE 431 Project', 'intraparenchymal')
+	save_location = Path('C:/', 'Users', 'ryanb', 'Desktop', 'ECE 431 Project', 'outputTest_png')
+	data_csv_filename = 'intraparenchymal'
 	types = ["intraparenchymal"]
-	preprocess_Dicom(dataset1_path, dataset1_filename, types)
+	preprocess_dicom(data_location, data_csv_filename, types, save_location, count)
 
-	# dataset2_path = Path('C:/', 'Users', 'ryanb', 'Desktop', 'ECE 431 Project', 'no_hemorrhage_1000')
-	# dataset2_filename = 'no_hemorrhage_1000'
-	# types = ["any"]
-	# preprocess_Dicom(dataset2_path, dataset2_filename, types)
-
-	print("CSVloader Run Time:", time.time() - start_time, "Seconds")
+	print("Preprocessing Dicom Images Run Time:", time.time() - start_time, "Seconds")
