@@ -88,8 +88,8 @@ class CSVFile:
 			#i += 1
 			# approx: 0.004 x 10^x seconds for 10^x loops
 			# aprox 2x that to actually move images
-			if i >= 12500: #12500:
-				break
+			# if i >= 10: #12500:
+			# 	break
 		pd.set_option('display.max_columns', None)
 		return new_dataframe
 
@@ -202,12 +202,12 @@ class CSVFile:
 if __name__ == '__main__':
 	start_time = time.time()
 	csv = CSVFile()
-	type_list = ['any']
+	type_list = ['intraventricular']
 	home_path = Path.cwd()
-	train_data = csv.load_CSV_for_mod(home_path, "stage_2_train.csv", type_list, pos_id=False, only_neg=True)
+	train_data = csv.load_CSV_for_mod(home_path, "stage_2_train.csv", type_list, pos_id=True, only_neg=False)
 	print(train_data.head(4))
 	dic_of_IDs = csv.index_types(train_data)
-	csv_filename = 'no_hemorrhage.csv'
+	csv_filename = 'intraventricular.csv'
 	csv.save_dataframe_as_csv(train_data, csv_filename)
 
 	# test_dic = {'intraparenchymal': ["ID_000a2d7b0", "ID_000a8710b", "ID_000a50137", "ID_000bf8860", "ID_000000e27"],
@@ -220,6 +220,6 @@ if __name__ == '__main__':
 	dic_loc = Path('E:/', 'rsna-intracranial-hemorrhage-detection', 'rsna-intracranial-hemorrhage-detection',
 	               'stage_2_train')
 	# new_data_loc = Path.cwd() / "intrapar_intravent_train_im"
-	new_data_loc = Path('C:/', 'Users', 'ryanb', 'Desktop', 'ECE 431 Project', 'no_hemorrhage')
+	new_data_loc = Path('C:/', 'Users', 'ryanb', 'Desktop', 'ECE 431 Project', 'intraventricular')
 	csv.index_types_to_dataset(dic_loc, new_data_loc, dic_of_IDs)
 	print("CSVloader Run Time:", time.time() - start_time, "Seconds")
