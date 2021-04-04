@@ -1,67 +1,61 @@
-from pathlib import Path
-import pydicom
 import matplotlib.pyplot as plt
 import cv2
 import numpy as np
-import numpy.ma as ma
 import scipy.ndimage
 from skimage import morphology
-from skimage import measure
 from skimage.transform import resize
+from skimage.filters import gaussian
 import pandas as pd
 
 
 class Preprocessing:
-	def __init__(self, dcmImage_ID):
-		self.dcmImage_ID = dcmImage_ID
 
-	def resize(self, array, new_size, display=True, histogram=True):
+	@staticmethod
+	def resize(array, new_size, display=False, histogram=False):
 		# TODO: add a smoothing element to rezise
-		ski_res = resize(array, new_size, preserve_range=True, anti_aliasing=True)
-		# ski_res = ski_res.astype('int32')
-
-		# interpolation types: INTER_NEAREST, INTER_LINEAR, INTER_AREA, INTER_CUBIC, INTER_LANCZOS4 - best
-		# resized = cv2.resize(array, new_size, interpolation=cv2.INTER_AREA)
+		resized = resize(array, new_size, preserve_range=True, anti_aliasing=True)
+		resized = resized.astype('int32')
+		# blur = gaussian(resized, sigma=1, mode='nearest', preserve_range=True)
+		# blur = blur.astype('int32')
 
 		if histogram:
 			fig, ax = plt.subplots(1, 2, figsize=[12, 6])
 			ax[0].set_title("Original Image")
-			ax[0].hist(array.flatten(), bins=50, range=(array.min(), array.max()))
+			ax[0].hist(array.flatten(), bins=200, range=(array.min(), array.max()))
 			ax[0].set_yscale("log")
 			ax[1].set_title("Resized Image")
-			ax[1].hist(ski_res.flatten(), bins=50, range=(ski_res.min(), ski_res.max()))
+			ax[1].hist(resized.flatten(), bins=200, range=(resized.min(), resized.max()))
 			ax[1].set_yscale("log")
 			plt.tight_layout()
 			plt.show()
-
 		if display:
 			fig, ax = plt.subplots(1, 2, figsize=[12, 6])
 			ax[0].set_title("Original Image")
 			ax[0].imshow(array, cmap='gray')
 			ax[0].axis('off')
 			ax[1].set_title("Resized Image")
-			ax[1].imshow(ski_res, cmap='gray')
+			ax[1].imshow(resized, cmap='gray')
 			ax[1].axis('off')
 			plt.tight_layout()
 			plt.show()
-		return ski_res
+		return resized
 
-	def make_mask(self, imageArray, display=False):
-		imghound = self.dcmImage_ID.scale_to_hu(imageArray)
-		okay = imageArray.pixel_array
-		kernel = np.ones((7, 7), np.uint8)
-		erosion = cv2.erode(imghound, kernel, iterations=2)
+	@staticmethod
+	def make_mask(array, display=False):
+		kernel1 = np.ones((7, 7), np.uint8)
+		erosion = cv2.erode(array, kernel1, iterations=2)
 		kernel2 = np.ones((20, 20), np.uint8)
 		dilate = cv2.dilate(erosion, kernel2, iterations=2)
 		threshhold = np.where(dilate < -500, 0, 1)
 		mask = morphology.area_closing(threshhold, 100000, connectivity=1)
-		# replace okay with imghound
-		final = okay * mask
-
-		if (display):
+		arr_min = np.amin(array)
+		array -= arr_min
+		final = array * mask
+		final += arr_min
+		if display:
 			fig, ax = plt.subplots(3, 2, figsize=[12, 12])
 			ax[0, 0].set_title("Original")
-			ax[0, 0].imshow(okay, cmap='gray')
+			ax[0, 0].imshow(array, cmap='gray')
 			ax[0, 0].axis('off')
 			ax[0, 1].set_title("Erosion")
 			ax[0, 1].imshow(erosion, cmap='gray')
@@ -81,32 +75,26 @@ class Preprocessing:
 			plt.show()
 		return final, mask
 
-	def channel_split(self, img):
+	def channel_split(self, img, display=False):
 		Channel1 = img.copy()
 		Channel1[Channel1 < -170] = -175
 		Channel1[Channel1 > 75] = -175  # 80
 		Channel1 += 175
 		Channel1 = Channel1.astype(np.uint8)
-
 		Channel2 = img.copy()
 		Channel2[Channel2 < 75] = 70
 		Channel2[Channel2 > 300] = 70   # 325
 		Channel2 -= 70
 		Channel2 = Channel2.astype(np.uint8)
-
 		Channel3 = img.copy()
 		Channel3[Channel3 < 300] = 280
 		Channel3[Channel3 > 2300] = 2300
 		Channel3 = Channel3 - 280
 		Channel3 = Channel3 / 8
 		Channel3 = Channel3.astype(np.uint8)
-
-		# self.display_channel_split(img, Channel1, Channel2, Channel3)
+		if display:
+			self.display_channel_split(img, Channel1, Channel2, Channel3)
 		img_3_channels = np.dstack((Channel1, Channel2, Channel3))
-		print(img_3_channels.shape)
-		print(type(img_3_channels), img_3_channels.dtype)
-		plt.imshow(img_3_channels)
-		plt.show()
 		return img_3_channels
 
 	@staticmethod
@@ -136,7 +124,6 @@ class Preprocessing:
 		plt.show()
 
 	def crop(self, array, mask):
-		pad = 0
 		row, col = array.shape
 		row_min, row_max, col_min, col_max = self.find_edges(mask)
 		row_temp = row_max - row_min
@@ -148,14 +135,25 @@ class Preprocessing:
 		row_max = row_temp + temp // 2
 		col_min = col_temp - temp // 2
 		col_max = col_temp + temp // 2
-		row_min = row_min - pad if row_min - pad >= 0 else 0
-		row_max = row_max + pad if row_max + pad <= row - 1 else row - 1
-		col_min = col_min - pad if col_min - pad >= 0 else 0
-		col_max = col_max + pad if col_max + pad <= col - 1 else col - 1
+		if row_min < 0:
+			row_max -= row_min
+			row_min = 0
+		if row_max > row - 1:
+			dif = row_max - (row - 1)
+			row_max = row - 1
+			row_min -= dif
+		if col_min < 0:
+			col_max -= col_min
+			col_min = 0
+		if col_max > col - 1:
+			dif = col_max - (row - 1)
+			col_max = col - 1
+			col_min -= dif
 		array = array[row_min:row_max, col_min:col_max]
 		return array
 
-	def find_edges(self, mask_array):
+	@staticmethod
+	def find_edges(mask_array):
 		row, col = mask_array.shape
 		row_min = 0
 		row_max = row - 1
