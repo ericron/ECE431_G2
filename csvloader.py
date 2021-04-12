@@ -88,8 +88,8 @@ class CSVFile:
 			#i += 1
 			# approx: 0.004 x 10^x seconds for 10^x loops
 			# aprox 2x that to actually move images
-			# if i >= 10: #12500:
-			# 	break
+			if i >= 10: #12500:
+				break
 		pd.set_option('display.max_columns', None)
 		return new_dataframe
 

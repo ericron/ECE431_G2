@@ -110,23 +110,23 @@ if __name__ == '__main__':
 	dicom_folder_path = Path.cwd() / "exampleImages_S00"
 	di = DicomImage()
 	pp = Preprocessing()
-	f1 = "ID_000000e27.dcm"
+	f1 = "ID_b13dbe0d6.dcm"
 	im1 = di.load_dicom(dicom_folder_path, f1)
 	# pp.channel_split(di.scale_to_hu(im1))
 	# di.show_dicom(im1)
 	arr1 = di.scale_to_hu(im1)
 	final_im1, mask1 = pp.make_mask(arr1, display=True)
-	# di.show_array(inal_im1)
+	# di.show_array(final_im1)
 	# arr1 = pp.crop(final_im1, mask1)
 	# di.show_array(arr1)
 	# arr1 = pp.resize(arr1, (200, 200))
 
-	f2 = "ID_000a2d7b0.dcm"
-	im2 = di.load_dicom(dicom_folder_path, f2)
+	# f2 = "ID_000a2d7b0.dcm"
+	# im2 = di.load_dicom(dicom_folder_path, f2)
 	# pp.channel_split(di.scale_to_hu(im2))
 	# di.show_dicom(im2)
 	# di.export_patient_ids(folder)
-	arr2 = di.scale_to_hu(im2)
-	final_im2, mask2 = pp.make_mask(arr2, display=True)
+	# arr2 = di.scale_to_hu(im2)
+	# final_im2, mask2 = pp.make_mask(arr2, display=True)
 	# di.show_array(final_im2)
 

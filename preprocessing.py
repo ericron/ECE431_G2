@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import cv2
 import numpy as np
 import scipy.ndimage
-from skimage import morphology
+from skimage import morphology, measure
 from skimage.transform import resize
 from skimage.filters import gaussian
 import pandas as pd
@@ -48,6 +48,12 @@ class Preprocessing:
 		dilate = cv2.dilate(erosion, kernel2, iterations=2)
 		threshhold = np.where(dilate < -500, 0, 1)
 		mask = morphology.area_closing(threshhold, 100000, connectivity=1)
+		mask_labels = measure.label(mask)
+		regions = measure.regionprops(mask_labels)
+		if len(regions) > 1:
+			regions.sort(key=lambda x: x.area, reverse=True)
+			for region in regions[1:]:
+				mask[region.coords[:, 0], region.coords[:, 1]] = 0
 		arr_min = np.amin(array)
 		array -= arr_min
 		final = array * mask
