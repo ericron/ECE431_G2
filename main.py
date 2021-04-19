@@ -71,7 +71,7 @@ def preprocess_dicom_from_masterlist(data_path, types, save_location, display=Fa
 		cnn.save_numpy_as_png(img_array, ids_list[i]+"_c1", save_location)
 		cnn.save_numpy_as_png(img_ch3_array, ids_list[i]+"_c3", save_location)
 		if i % 500 == 0:
-			print(i*10, "Images have been processed")
+			print(i, "Images have been processed")
 		if display:
 			fig, ax = plt.subplots(2, 2, figsize=[12, 6])
 			ax[0, 0].set_title("Full Image")
@@ -94,9 +94,9 @@ def preprocess_dicom_from_masterlist(data_path, types, save_location, display=Fa
 
 if __name__ == '__main__':
 	start_time = time.time()
-	type_list = ['intraventricular']
+	type_list = ['intraparenchymal']
 	data_location = Path('E:/', 'rsna-intracranial-hemorrhage-detection', 'rsna-intracranial-hemorrhage-detection', 'stage_2_train')
-	save_location = Path('C:/', 'Users', 'ryanb', 'Desktop', 'ECE 431 Project', 'intraventricular_png')
+	save_location = Path('C:/', 'Users', 'ryanb', 'Desktop', 'ECE 431 Project', 'intraparenchymal_png')
 	preprocess_dicom_from_masterlist(data_location, type_list, save_location)
 	print("Preprocessing Dicom Images Run Time:", time.time() - start_time, "Seconds")
 

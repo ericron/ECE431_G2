@@ -42,7 +42,7 @@ class Preprocessing:
 
 	@staticmethod
 	def make_mask(array, display=False):
-		kernel1 = np.ones((7, 7), np.uint8)
+		kernel1 = np.ones((10, 10), np.uint8)
 		erosion = cv2.erode(array, kernel1, iterations=2)
 		kernel2 = np.ones((20, 20), np.uint8)
 		dilate = cv2.dilate(erosion, kernel2, iterations=2)
