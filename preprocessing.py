@@ -1,47 +1,31 @@
-import matplotlib.pyplot as plt
-import cv2
 import numpy as np
-import scipy.ndimage
+import cv2
 from skimage import morphology, measure
 from skimage.transform import resize
-from skimage.filters import gaussian
 import pandas as pd
+from PIL import Image
 
 
 class Preprocessing:
 
 	@staticmethod
-	def resize(array, new_size, display=False, histogram=False):
-		# TODO: add a smoothing element to rezise
+	def save_numpy_as_png(np_arr, filename, save_location):
+		if len(np_arr.shape) == 2:
+			arr_min = np.amin(np_arr)
+			np_arr -= arr_min
+		pngName = filename + '.png'
+		pngPath = save_location / pngName
+		img = Image.fromarray(np_arr)
+		img.save(pngPath)
+
+	@staticmethod
+	def resize(array, new_size):
 		resized = resize(array, new_size, preserve_range=True, anti_aliasing=True)
 		resized = resized.astype('int32')
-		# blur = gaussian(resized, sigma=1, mode='nearest', preserve_range=True)
-		# blur = blur.astype('int32')
-
-		if histogram:
-			fig, ax = plt.subplots(1, 2, figsize=[12, 6])
-			ax[0].set_title("Original Image")
-			ax[0].hist(array.flatten(), bins=200, range=(array.min(), array.max()))
-			ax[0].set_yscale("log")
-			ax[1].set_title("Resized Image")
-			ax[1].hist(resized.flatten(), bins=200, range=(resized.min(), resized.max()))
-			ax[1].set_yscale("log")
-			plt.tight_layout()
-			plt.show()
-		if display:
-			fig, ax = plt.subplots(1, 2, figsize=[12, 6])
-			ax[0].set_title("Original Image")
-			ax[0].imshow(array, cmap='gray')
-			ax[0].axis('off')
-			ax[1].set_title("Resized Image")
-			ax[1].imshow(resized, cmap='gray')
-			ax[1].axis('off')
-			plt.tight_layout()
-			plt.show()
 		return resized
 
 	@staticmethod
-	def make_mask(array, display=False):
+	def make_mask(array):
 		kernel1 = np.ones((10, 10), np.uint8)
 		erosion = cv2.erode(array, kernel1, iterations=2)
 		kernel2 = np.ones((20, 20), np.uint8)
@@ -58,30 +42,9 @@ class Preprocessing:
 		array -= arr_min
 		final = array * mask
 		final += arr_min
-		if display:
-			fig, ax = plt.subplots(3, 2, figsize=[12, 12])
-			ax[0, 0].set_title("Original")
-			ax[0, 0].imshow(array, cmap='gray')
-			ax[0, 0].axis('off')
-			ax[0, 1].set_title("Erosion")
-			ax[0, 1].imshow(erosion, cmap='gray')
-			ax[0, 1].axis('off')
-			ax[1, 0].set_title("Dilation")
-			ax[1, 0].imshow(dilate, cmap='gray')
-			ax[1, 0].axis('off')
-			ax[1, 1].set_title("Threshold")
-			ax[1, 1].imshow(threshhold, cmap='gray')
-			ax[1, 1].axis('off')
-			ax[2, 0].set_title("Mask")
-			ax[2, 0].imshow(mask, cmap='gray')
-			ax[2, 0].axis('off')
-			ax[2, 1].set_title("Masked Image")
-			ax[2, 1].imshow(final, cmap='gray')
-			ax[2, 1].axis('off')
-			plt.show()
 		return final, mask
 
-	def channel_split(self, img, display=False):
+	def channel_split(self, img):
 		Channel1 = img.copy()
 		Channel1[Channel1 < -170] = -175
 		Channel1[Channel1 > 75] = -175  # 80
@@ -98,36 +61,8 @@ class Preprocessing:
 		Channel3 = Channel3 - 280
 		Channel3 = Channel3 / 8
 		Channel3 = Channel3.astype(np.uint8)
-		if display:
-			self.display_channel_split(img, Channel1, Channel2, Channel3)
 		img_3_channels = np.dstack((Channel1, Channel2, Channel3))
 		return img_3_channels
-
-	@staticmethod
-	def display_channel_split(OrigImg, Channel1, Channel2, Channel3):
-		fig, ax = plt.subplots(2, 4, figsize=[12, 12])
-		ax[0, 0].set_title("Original Image")
-		ax[0, 0].imshow(OrigImg, cmap='gray')
-		ax[0, 0].axis('off')
-		ax[0, 1].set_title("Channel 1")
-		ax[0, 1].imshow(Channel1, cmap='gray')
-		ax[0, 1].axis('off')
-		ax[0, 2].set_title("Channel 2")
-		ax[0, 2].imshow(Channel2, cmap='gray')
-		ax[0, 2].axis('off')
-		ax[0, 3].set_title("Channel 3")
-		ax[0, 3].imshow(Channel3, cmap='gray')
-		ax[0, 3].axis('off')
-		ax[1, 0].hist(OrigImg.flatten(), bins=250, range=(OrigImg.min(), OrigImg.max()))
-		ax[1, 0].set_yscale('log')
-		ax[1, 1].hist(Channel1.flatten(), bins=250, range=(Channel1.min(), Channel1.max()))
-		ax[1, 1].set_yscale('log')
-		ax[1, 2].hist(Channel2.flatten(), bins=225, range=(Channel2.min(), Channel2.max()))
-		ax[1, 2].set_yscale('log')
-		ax[1, 3].hist(Channel3.flatten(), bins=140, range=(Channel3.min(), Channel3.max()))
-		ax[1, 3].set_yscale('log')
-		plt.tight_layout()
-		plt.show()
 
 	def crop(self, array, mask):
 		row, col = array.shape

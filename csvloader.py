@@ -1,41 +1,14 @@
-from pathlib import Path
+import numpy as np
 import pandas as pd
-import shutil
-import time
 
 
 class CSVFile:
 	def __init__(self):
-		self.home_path = Path.cwd()
 		self.only_neg = None
-
-	def load_CSV(self, filepath, filename, types, count):
-		"""
-		For loading already rearagnged CSV files
-		type options: ['epidural', 'intraparenchymal', 'intraventricular', 'subarachnoid', 'subdural', 'any']
-		:param count:
-		:param filepath: path to CSV file
-		:param filename: name of CSV file
-		:param types: list of types of hemorrhaging in the CSV file, excluding any
-		:return: dataframe of CSV file
-		"""
-		i = 0
-		path = filepath / filename
-		new_col = ['ID'] + types
-		new_dataframe = pd.DataFrame(columns=new_col)
-		for df in pd.read_csv(path, chunksize=10):
-			df.reset_index(drop=True, inplace=True)
-			new_dataframe = pd.concat([new_dataframe, df])
-			i += 1
-			if i >= count:
-				break
-		pd.set_option('display.max_columns', None)
-		new_dataframe.reset_index(drop=True, inplace=True)
-		return new_dataframe
 
 	def load_CSV_for_mod(self, filepath, filename, types, pos_id, only_neg):
 		"""
-		type options: ['epidural', 'intraparenchymal', 'intraventricular', 'subarachnoid', 'subdural', 'add']
+		type options: ['epidural', 'intraparenchymal', 'intraventricular', 'subarachnoid', 'subdural', 'any']
 		*empty types list results in dataframe of 'ID'
 		:param filepath: path to CSV file
 		:param filename: name of CSV file
@@ -85,11 +58,10 @@ class CSVFile:
 				else:
 					i += 1
 					new_dataframe.loc[len(new_dataframe.index)] = results
-			#i += 1
 			# approx: 0.004 x 10^x seconds for 10^x loops
 			# aprox 2x that to actually move images
-			# if i >= 20: #12500:
-			# 	break
+			if i >= 10:
+				break
 		pd.set_option('display.max_columns', None)
 		return new_dataframe
 
@@ -160,66 +132,3 @@ class CSVFile:
 		:return: None
 		"""
 		df.to_csv(filename, index=False)
-
-	def index_types_to_dataset(self, dicom_location, new_dataset_location, dict, subdirectory=False):
-		keys = list(dict.keys())
-		for i in range(len(keys)):
-			hem_type = str(keys[i])
-			list_ids = dict[keys[i]]
-			if subdirectory:
-				new_data_loc = new_dataset_location / hem_type
-				self.create_dataset(dicom_location, new_data_loc, list_ids)
-			else:
-				# if not hem_type == 'any':
-				self.create_dataset(dicom_location, new_dataset_location, list_ids)
-
-	def create_dataset(self, dicom_location, new_dataset_location, IDs):
-		"""
-		Copys dicom image from dicom_location to new_dataset_location of dicom images contained
-		in list IDs
-		:param dicom_location: pathlib Path of current dicom image location
-		:param new_dataset_location: pathlib Path of location to copy dicom images to
-		:param IDs: list of dicom image IDs (no .dcm on end). format example: ['ID_000af28ac',]
-		:return: None
-		"""
-		if dicom_location.is_dir():
-			new_dataset_location.mkdir(exist_ok=True)
-			for f in IDs:
-				filename = f + '.dcm'
-				cur_loc = dicom_location / filename
-				if cur_loc.is_file():
-					future_loc = new_dataset_location / filename
-					if not future_loc.exists():
-						shutil.copy(cur_loc, future_loc)
-					else:
-						print("Error: Dicom image file already exists")
-				else:
-					print("Error: Dicom image file could not be found")
-		else:
-			print("Error: Dicom image location folder does not exist")
-
-
-if __name__ == '__main__':
-	start_time = time.time()
-	csv = CSVFile()
-	type_list = ['intraventricular']
-	home_path = Path.cwd()
-	train_data = csv.load_CSV_for_mod(home_path, "stage_2_train.csv", type_list, pos_id=True, only_neg=False)
-	print(train_data.head(4))
-	dic_of_IDs = csv.index_types(train_data)
-	csv_filename = 'intraventricular.csv'
-	csv.save_dataframe_as_csv(train_data, csv_filename)
-
-	# test_dic = {'intraparenchymal': ["ID_000a2d7b0", "ID_000a8710b", "ID_000a50137", "ID_000bf8860", "ID_000000e27"],
-	#             'intraventricular': ["ID_000af28ac", "ID_000b220f4", "ID_000bda502"],
-	#             'any': ["ID_000a2d7b0", "ID_000a8710b", "ID_000a50137", "ID_000af28ac", "ID_000b220f4", "ID_000bda502",
-	#              "ID_000bf8860", "ID_000000e27"]}
-	# test_dic for folder "exampleImages_S00"
-	# dic_loc = Path.cwd() / "exampleImages_S00"
-	# E:\rsna-intracranial-hemorrhage-detection\rsna-intracranial-hemorrhage-detection\stage_2_train
-	dic_loc = Path('E:/', 'rsna-intracranial-hemorrhage-detection', 'rsna-intracranial-hemorrhage-detection',
-	               'stage_2_train')
-	# new_data_loc = Path.cwd() / "intrapar_intravent_train_im"
-	new_data_loc = Path('C:/', 'Users', 'ryanb', 'Desktop', 'ECE 431 Project', 'intraventricular')
-	csv.index_types_to_dataset(dic_loc, new_data_loc, dic_of_IDs)
-	print("CSVloader Run Time:", time.time() - start_time, "Seconds")
