@@ -209,17 +209,8 @@ if __name__ == '__main__':
 	dic_of_IDs = csv.index_types(train_data)
 	csv_filename = 'intraventricular.csv'
 	csv.save_dataframe_as_csv(train_data, csv_filename)
-
-	# test_dic = {'intraparenchymal': ["ID_000a2d7b0", "ID_000a8710b", "ID_000a50137", "ID_000bf8860", "ID_000000e27"],
-	#             'intraventricular': ["ID_000af28ac", "ID_000b220f4", "ID_000bda502"],
-	#             'any': ["ID_000a2d7b0", "ID_000a8710b", "ID_000a50137", "ID_000af28ac", "ID_000b220f4", "ID_000bda502",
-	#              "ID_000bf8860", "ID_000000e27"]}
-	# test_dic for folder "exampleImages_S00"
-	# dic_loc = Path.cwd() / "exampleImages_S00"
-	# E:\rsna-intracranial-hemorrhage-detection\rsna-intracranial-hemorrhage-detection\stage_2_train
 	dic_loc = Path('E:/', 'rsna-intracranial-hemorrhage-detection', 'rsna-intracranial-hemorrhage-detection',
 	               'stage_2_train')
-	# new_data_loc = Path.cwd() / "intrapar_intravent_train_im"
-	new_data_loc = Path('C:/', 'Users', 'ryanb', 'Desktop', 'ECE 431 Project', 'intraventricular')
+	new_data_loc = Path('E:/', 'intraventricular')
 	csv.index_types_to_dataset(dic_loc, new_data_loc, dic_of_IDs)
 	print("CSVloader Run Time:", time.time() - start_time, "Seconds")

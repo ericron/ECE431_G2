@@ -57,7 +57,6 @@ class DicomImage:
 		arr = slope*arr + intercept
 		oldmax = np.max(arr)
 		oldmin = np.min(arr)
-		# there should be no reduction/scaling as a result of conversion to type int16
 		arr = arr.astype(np.int16)
 		if np.max(arr) != oldmax or np.min(arr) != oldmin:
 			raise Exception("Rescaling Numpy array caused data conversion. Possible issue.")

@@ -1,10 +1,8 @@
 import matplotlib.pyplot as plt
 import cv2
 import numpy as np
-import scipy.ndimage
 from skimage import morphology, measure
 from skimage.transform import resize
-from skimage.filters import gaussian
 import pandas as pd
 
 
@@ -12,11 +10,8 @@ class Preprocessing:
 
 	@staticmethod
 	def resize(array, new_size, display=False, histogram=False):
-		# TODO: add a smoothing element to rezise
 		resized = resize(array, new_size, preserve_range=True, anti_aliasing=True)
 		resized = resized.astype('int32')
-		# blur = gaussian(resized, sigma=1, mode='nearest', preserve_range=True)
-		# blur = blur.astype('int32')
 
 		if histogram:
 			fig, ax = plt.subplots(1, 2, figsize=[12, 6])
@@ -84,12 +79,12 @@ class Preprocessing:
 	def channel_split(self, img, display=False):
 		Channel1 = img.copy()
 		Channel1[Channel1 < -170] = -175
-		Channel1[Channel1 > 75] = -175  # 80
+		Channel1[Channel1 > 75] = -175
 		Channel1 += 175
 		Channel1 = Channel1.astype(np.uint8)
 		Channel2 = img.copy()
 		Channel2[Channel2 < 75] = 70
-		Channel2[Channel2 > 300] = 70   # 325
+		Channel2[Channel2 > 300] = 70
 		Channel2 -= 70
 		Channel2 = Channel2.astype(np.uint8)
 		Channel3 = img.copy()
