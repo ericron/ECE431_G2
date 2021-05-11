@@ -15,6 +15,10 @@ class DicomImage:
 		return dicom
 
 	@staticmethod
+	def dicom_to_numpy(dicom):
+		return dicom.pixel_array
+
+	@staticmethod
 	def scale_to_hu(dicom):
 		"""
 		Converts DICOM image to numpy array in Hounsfield Units
